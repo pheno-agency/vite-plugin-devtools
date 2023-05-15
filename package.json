@@ -1,0 +1,42 @@
+{
+  "name": "packageName",
+  "version": "0.0.0",
+  "description": "",
+  "repository": "unjs/packageName",
+  "license": "MIT",
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "vitest dev",
+    "lint": "eslint --cache --ext .ts,.js,.mjs,.cjs . && prettier -c src test",
+    "lint:fix": "eslint --cache --ext .ts,.js,.mjs,.cjs . --fix && prettier -c src test -w",
+    "prepack": "pnpm run build",
+    "release": "pnpm test && changelogen --release && npm publish && git push --follow-tags",
+    "test": "pnpm lint && vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vitest/coverage-c8": "^0.30.1",
+    "changelogen": "^0.5.3",
+    "eslint": "^8.39.0",
+    "eslint-config-unjs": "^0.1.0",
+    "prettier": "^2.8.8",
+    "typescript": "^4.9.5",
+    "unbuild": "^1.2.1",
+    "vitest": "^0.30.1"
+  },
+  "packageManager": "pnpm@7.32.2"
+}

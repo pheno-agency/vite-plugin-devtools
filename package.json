@@ -1,8 +1,8 @@
 {
-  "name": "packageName",
+  "name": "vite-plugin-devtools",
   "version": "0.0.0",
   "description": "",
-  "repository": "unjs/packageName",
+  "repository": "Pheno-agency/vite-plugin-devtools",
   "license": "MIT",
   "sideEffects": false,
   "type": "module",
@@ -21,12 +21,22 @@
   ],
   "scripts": {
     "build": "unbuild",
+    "stub": "unbuild --stub",
     "dev": "vitest dev",
     "lint": "eslint --cache --ext .ts,.js,.mjs,.cjs . && prettier -c src test",
     "lint:fix": "eslint --cache --ext .ts,.js,.mjs,.cjs . --fix && prettier -c src test -w",
     "prepack": "pnpm run build",
     "release": "pnpm test && changelogen --release && npm publish && git push --follow-tags",
     "test": "pnpm lint && vitest run --coverage"
+  },
+  "peerDependencies": {
+    "vite": "^3.0.0-0 || ^4.0.0-0"
+  },
+  "dependencies": {
+    "nanoid": "^4.0.2",
+    "sirv": "^2.0.3",
+    "splitpanes": "^3.1.5",
+    "vite-hot-client": "^0.2.1"
   },
   "devDependencies": {
     "@vitest/coverage-c8": "^0.30.1",

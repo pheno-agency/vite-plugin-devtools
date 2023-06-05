@@ -4,7 +4,9 @@
     "module": "ESNext",
     "moduleResolution": "Node",
     "esModuleInterop": true,
-    "strict": true
+    "strict": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true,
   },
   "include": ["src"]
 }

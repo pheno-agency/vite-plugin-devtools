@@ -1,10 +1,9 @@
 import "virtual:devtools:common";
+import { iframeSrc, icon } from './injectable'
 
 const devtoolsButton = document.createElement("button");
 devtoolsButton.classList.add("devtools-toggle");
-devtoolsButton.innerHTML = `
-  __icon__
-`;
+devtoolsButton.innerHTML = icon
 
 const PANEL_MIN = 15;
 const PANEL_MAX = 100;
@@ -306,7 +305,7 @@ const loadPanel = (barEl) => requestAnimationFrame(() => {
   panelEl.classList.add("devtools-panel");
   const iframeEl = document.createElement("iframe");
   state.iframeEl = iframeEl
-  iframeEl.src = "/__devtools__/";
+  iframeEl.src = iframeSrc;
   panelEl.appendChild(iframeEl);
   barEl.append(panelEl);
 

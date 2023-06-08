@@ -73,3 +73,9 @@ export function addClientFunction<T extends keyof ClientFunctions>(
 
   clientFunctions[name] = func.bind(clientRPC);
 }
+
+const positionBroadcast = new BroadcastChannel('__devtools__position__')
+
+export function changePosition(position: 'bottom' | 'top' | 'left' | 'right') {
+  positionBroadcast.postMessage(position)
+}

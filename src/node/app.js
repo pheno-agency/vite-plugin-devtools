@@ -1,9 +1,9 @@
 import "virtual:devtools:common";
-import { iframeSrc, icon } from './injectable'
+import { iframeSrc, icon } from "./injectable";
 
 const devtoolsButton = document.createElement("button");
 devtoolsButton.classList.add("devtools-toggle");
-devtoolsButton.innerHTML = icon
+devtoolsButton.innerHTML = icon;
 
 const PANEL_MIN = 15;
 const PANEL_MAX = 100;
@@ -167,9 +167,9 @@ function toggleDragging(direction) {
 }
 
 const mouseleave = () => {
-  state.iframeEl.style.pointerEvents = 'auto'
+  state.iframeEl.style.pointerEvents = "auto";
   isDragging = false;
-}
+};
 
 document.addEventListener("mouseup", mouseleave);
 document.addEventListener("mouseleave", mouseleave);
@@ -177,15 +177,12 @@ document.addEventListener("mouseleave", mouseleave);
 document.addEventListener("mousemove", (e) => {
   if (!isDragging) return;
 
-  state.iframeEl.style.pointerEvents = 'none'
-  const alignSide =
-    state.position === "left" || state.position === "right";
+  state.iframeEl.style.pointerEvents = "none";
+  const alignSide = state.position === "left" || state.position === "right";
 
   if (isDragging === "horizontal" || isDragging === "both") {
     const y =
-      state.position === "top"
-        ? window.innerHeight - e.clientY
-        : e.clientY;
+      state.position === "top" ? window.innerHeight - e.clientY : e.clientY;
     const boxHeight = window.innerHeight;
     const value = alignSide
       ? (Math.abs(y - window.innerHeight / 2) / boxHeight) * 100 * 2
@@ -195,9 +192,7 @@ document.addEventListener("mousemove", (e) => {
 
   if (isDragging === "vertical" || isDragging === "both") {
     const x =
-      state.position === "left"
-        ? window.innerWidth - e.clientX
-        : e.clientX;
+      state.position === "left" ? window.innerWidth - e.clientX : e.clientX;
     const boxWidth = window.innerWidth;
     const value = alignSide
       ? ((window.innerWidth - x) / boxWidth) * 100
@@ -205,20 +200,29 @@ document.addEventListener("mousemove", (e) => {
     state.width = Math.min(PANEL_MAX, Math.max(PANEL_MIN, value));
   }
 
-  changePanelStyle(state.panelEl)
+  changePanelStyle(state.panelEl);
 });
 
-const resizeBaseClassName = 'devtools-resize-handle'
-const resizeVerticalClassName = [resizeBaseClassName, `${resizeBaseClassName}-vertical`]
-const resizeHorizontalClassName = [resizeBaseClassName, `${resizeBaseClassName}-horizontal`]
-const resizeCornerClassName = [resizeBaseClassName, `${resizeBaseClassName}-corner`]
+const resizeBaseClassName = "devtools-resize-handle";
+const resizeVerticalClassName = [
+  resizeBaseClassName,
+  `${resizeBaseClassName}-vertical`,
+];
+const resizeHorizontalClassName = [
+  resizeBaseClassName,
+  `${resizeBaseClassName}-horizontal`,
+];
+const resizeCornerClassName = [
+  resizeBaseClassName,
+  `${resizeBaseClassName}-corner`,
+];
 
-const resizeEls = new Map()
+const resizeEls = new Map();
 function loadResize(panelEl) {
   for (const [k, v] of resizeEls) {
-    k.parentElement.removeChild(k)
-    k.removeEventListener('mousedown', v)
-    resizeEls.delete(v)
+    k.parentElement.removeChild(k);
+    k.removeEventListener("mousedown", v);
+    resizeEls.delete(v);
   }
   const divs = [
     {
@@ -249,15 +253,13 @@ function loadResize(panelEl) {
     },
     {
       class: resizeCornerClassName,
-      display:
-        state.position !== "bottom" && state.position !== "right",
+      display: state.position !== "bottom" && state.position !== "right",
       style: { bottom: 0, right: 0, cursor: "nwse-resize" },
       direction: "both",
     },
     {
       class: resizeCornerClassName,
-      display:
-        state.position !== "bottom" && state.position !== "left",
+      display: state.position !== "bottom" && state.position !== "left",
       style: { bottom: 0, left: 0, cursor: "nesw-resize" },
       direction: "both",
     },
@@ -276,46 +278,47 @@ function loadResize(panelEl) {
       direction: "vertical",
     },
   ];
-  divs.forEach(({display,direction,style, class: classList}) => {
+  divs.forEach(({ display, direction, style, class: classList }) => {
     if (!display) {
-      return
+      return;
     }
-    const resizeEl = document.createElement('div')
+    const resizeEl = document.createElement("div");
 
-    resizeEl.classList.add(...classList)
-    Object.assign(resizeEl.style, style)
+    resizeEl.classList.add(...classList);
+    Object.assign(resizeEl.style, style);
     const listener = (e) => {
-      e.preventDefault()
-      toggleDragging(direction)
-    }
-    resizeEls.set(resizeEl, listener)
-    resizeEl.addEventListener('mousedown', listener)
-    panelEl.appendChild(resizeEl)
-  })
+      e.preventDefault();
+      toggleDragging(direction);
+    };
+    resizeEls.set(resizeEl, listener);
+    resizeEl.addEventListener("mousedown", listener);
+    panelEl.appendChild(resizeEl);
+  });
 }
 
-const loadPanel = (barEl) => requestAnimationFrame(() => {
-  const panelEl = document.createElement("div");
-  state.panelEl = panelEl
-  Object.assign(panelEl.style, {
-    zIndex: -100000,
-    left: "-9999px",
-    top: "-9999px",
-  });
-  panelEl.classList.add("devtools-panel");
-  const iframeEl = document.createElement("iframe");
-  state.iframeEl = iframeEl
-  iframeEl.src = iframeSrc;
-  panelEl.appendChild(iframeEl);
-  barEl.append(panelEl);
+const loadPanel = (barEl) =>
+  requestAnimationFrame(() => {
+    const panelEl = document.createElement("div");
+    state.panelEl = panelEl;
+    Object.assign(panelEl.style, {
+      zIndex: -100000,
+      left: "-9999px",
+      top: "-9999px",
+    });
+    panelEl.classList.add("devtools-panel");
+    const iframeEl = document.createElement("iframe");
+    state.iframeEl = iframeEl;
+    iframeEl.src = iframeSrc;
+    panelEl.appendChild(iframeEl);
+    barEl.append(panelEl);
 
-  loadResize(panelEl)
+    loadResize(panelEl);
 
-  devtoolsButton.addEventListener("mousedown", (e) => {
-    e.preventDefault();
-    togglePanel(panelEl);
+    devtoolsButton.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      togglePanel(panelEl);
+    });
   });
-})
 
 let isPanelVisible = false;
 
@@ -347,14 +350,22 @@ function togglePanel(panelEl) {
   isPanelVisible = !isPanelVisible;
 }
 
+const positionBroadcast = new BroadcastChannel("__devtools__position__");
+
+positionBroadcast.onmessage = ({ data: p }) => {
+  localStorage.setItem("__devtools__position__", p);
+
+  toggleButtonPosition(p);
+};
+
 function load() {
   const barEl = document.querySelector(".devtools-bar");
   barEl.append(devtoolsButton);
 
-  toggleButtonPosition("top");
+  toggleButtonPosition(
+    localStorage.getItem("__devtools__position__") || "bottom"
+  );
 
   loadPanel(barEl);
-
-
 }
 load();

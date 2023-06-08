@@ -4,9 +4,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "vite build devtools-test ; vite dev"
   },
   "dependencies": {
     "@vueuse/core": "^10.1.2",

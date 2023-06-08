@@ -3,7 +3,7 @@ import type { BirpcReturn, BirpcGroupReturn } from 'birpc'
 export interface DefaultServerFunctions {
   staticAssets(): Promise<AssetInfo[]>
   getImageMeta(filepath: string): Promise<ImageMeta | undefined>
-  getTextAssetContent(filepath: string, limit = 300): Promise<string | undefined>
+  getTextAssetContent(filepath: string, limit?: number): Promise<string | undefined>
   getPackages(): Promise<{ packages: Record<string, string> }>
 }
 

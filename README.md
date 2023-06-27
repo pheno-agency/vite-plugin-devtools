@@ -65,7 +65,7 @@ addServerFunction("here", function() {
 
 #### plugin
 
-The `plugin` is an option that can be passed to Vite.
+The `plugin` option can be passed to Vite to integrate the devtools.
 
 #### serverRPC
 
@@ -109,9 +109,42 @@ setInterval(async () => {
 
 #### clientRPC
 
-The `clientRPC` is similar to `serverRPC` but allows calling functions defined by the server using `addServerFunction`.
+The `clientRPC` object allows calling functions defined by the server using `addServerFunction`.
 
 #### changePosition
 
-The `changePosition` function is used to modify the position of the devtools bar and associated iframes. This function affects other devtools positions as well.
+The `changePosition` function is used to modify the position of the devtools bar and associated iframes. It affects the positions of other devtools as well.
+
+## TypeScript
+
+To enhance autocompletion and type safety for your functions, `serverRPC`, `clientRPC`,
+
+ and the `this` keyword, you can use type guarding by extending the `ServerFunctions` and `ClientFunctions` interfaces.
+
+```typescript
+declare module "vite-plugin-devtools" {
+  export interface ServerFunctions {
+    here(): string;
+  }
+  export interface ClientFunctions {
+    ping(): string;
+  }
+}
+```
+
+This allows for better development experience with autocompletion and type checking.
+
+## Utilities
+
+Common utilities that may be used by devtools plugins.
+
+```ts
+interface DefaultServerFunctions {
+  staticAssets(): Promise<AssetInfo[]>
+  getImageMeta(filepath: string): Promise<ImageMeta | undefined>
+  getTextAssetContent(filepath: string, limit?: number): Promise<string | undefined>
+  getPackages(): Promise<{ packages: Record<string, string> }>
+}
+```
+These are all available by default in `clientRPC`.
 

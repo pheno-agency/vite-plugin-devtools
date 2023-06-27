@@ -4,7 +4,7 @@ import createDevtools from "vite-plugin-devtools";
 
 declare module "vite-plugin-devtools" {
   export interface ServerFunctions {
-    here(): "here";
+    here(): string;
   }
   export interface ClientFunctions {
     ping(): string;

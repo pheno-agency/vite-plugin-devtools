@@ -2,13 +2,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { normalizePath, ViteDevServer } from "vite";
 import type { PluginOption } from "vite";
+import { createBirpcGroup } from 'birpc';
 import sirv from "sirv";
-import type {
-  DefaultServerFunctions,
-  ServerFunction,
-  ServerFunctions,
-  ToServerFunction,
-} from "./types";
+import type { ClientFunctions, DefaultServerFunctions, ServerFunction, ServerFunctions, ToServerFunction } from './types';
 import { attachWebSocket, Config } from "./middlewares/attach";
 import { getPackages } from "./functions/packages";
 import {
@@ -53,6 +49,7 @@ function addServerFunctionToConfig<T extends keyof ServerFunctions>(
   if (!name) {
     throw new Error("Please specify a name for your server function");
   }
+  console.log(config.serverRPC)
   // @ts-ignore
   config.serverFunctions[name] = func.bind(config.serverRPC);
 }
@@ -75,6 +72,14 @@ export default function createDevtools<
     } as DefaultServerFunctions as any,
     serverRPC: null,
   };
+
+  const rpc = createBirpcGroup<ClientFunctions, DefaultServerFunctions & ServerFunctions>(
+    config.serverFunctions as any,
+    [],
+    {},
+  )
+  config.serverRPC = rpc.broadcast
+
   const devtoolsPath = getDevtoolsPath();
   let iframeSrc: string;
 
@@ -87,9 +92,7 @@ export default function createDevtools<
   };
 
   return {
-    getRPC() {
-      return config.serverRPC;
-    },
+    serverRPC: config.serverRPC,
     addServerFunction: addServerFunctionToConfig.bind(
       null,
       config
@@ -107,7 +110,7 @@ export default function createDevtools<
           sirv(options.clientDir, { single: true, dev: true })
         );
 
-        attachWebSocket(config, iframeSrc, server);
+        attachWebSocket(rpc, iframeSrc, server);
       },
       async resolveId(importee: string, importer) {
         if (importee.startsWith(`virtual:devtools:${name}:`)) {

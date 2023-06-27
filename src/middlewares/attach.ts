@@ -1,4 +1,4 @@
-import { ChannelOptions, createBirpcGroup } from 'birpc';
+import type { BirpcGroup, ChannelOptions } from 'birpc';
 import type { WebSocket } from 'ws'
 import { WebSocketServer } from 'ws'
 import type {ViteDevServer} from 'vite'
@@ -9,15 +9,10 @@ export type Config = { serverFunctions: Record<string, ServerFunction>, serverRP
 
 const wsClients = new Map<string, Set<WebSocket>>()
 
-export function attachWebSocket(config: Config, iframeSrc: string, server: ViteDevServer) {
+export function attachWebSocket(rpc: BirpcGroup<ClientFunctions, DefaultServerFunctions & ServerFunctions>, iframeSrc: string, server: ViteDevServer) {
   if (!wsClients.has(iframeSrc)) {
     wsClients.set(iframeSrc, new Set())
   }
-  const rpc = createBirpcGroup<ClientFunctions, DefaultServerFunctions & ServerFunctions>(
-    config.serverFunctions as any,
-    [],
-    {},
-  )
 
   const route = '/__devtools__ws__/' + iframeSrc.split('/')[1]
   const wss = new WebSocketServer({ noServer: true })
@@ -53,6 +48,4 @@ export function attachWebSocket(config: Config, iframeSrc: string, server: ViteD
       })
     })
   })
-
-  config.serverRPC = rpc.broadcast
 }

@@ -1,64 +1,100 @@
-# packageName
+![](patak-tweet.png)
 
-[![npm version][npm-version-src]][npm-version-href]
-[![npm downloads][npm-downloads-src]][npm-downloads-href]
-[![bundle][bundle-src]][bundle-href]
-[![Codecov][codecov-src]][codecov-href]
-[![License][license-src]][license-href]
-[![JSDocs][jsdocs-src]][jsdocs-href]
+# vite-plugin-devtools
 
-This is my package description.
+A framework-agnostic devtools builder for any tool/library that is based on
+vite. It can be used as a shared base for [vite-plugin-vue-devtools](https://github.com/webfansplz/vite-plugin-vue-devtools) and
+[nuxt-devtools](https://github.com/nuxt/devtools).
 
-## Usage
+- Extensive API
+- Multi-devtools Option
+- Simple & Light-weight
+- Full Client & Server Control
 
-Install package:
+```ts
+// server (vite.config.js or plugin entry)
+import createDevtools from "vite-plugin-devtools";
 
-```sh
-# npm
-npm install packageName
+const { addServerFunction, plugin, serverRPC } = createDevtools("devtools-test", {
+  icon: `/* svg string */`,
+  clientDir: "./test/dist/",
+});
 
-# yarn
-yarn add packageName
+// client (in `clientDir`)
+import { addClientFunction } from 'vite-plugin-devtools/client'
 
-# pnpm
-pnpm install packageName
+addClientFunction('ping', () => {
+  return 'response from client'
+})
 ```
 
-Import:
+## API
+### `createDevtools`
 
-```js
-// ESM
-import {} from "packageName";
+```ts
+type Options = {
+    icon: string;
+    clientDir: string;
+};
 
-// CommonJS
-const {} = require("packageName");
+declare function createDevtools<T extends keyof ServerFunctions = keyof ServerFunctions>(name: string, options: Options): {
+    serverRPC: birpc.BirpcGroupReturn<ClientFunctions>;
+    addServerFunction: AddServerFunction<T>;
+    plugin: PluginOption;
+};
 ```
 
-## Development
+#### `addServerFunction`
 
-- Clone this repository
-- Install latest LTS version of [Node.js](https://nodejs.org/en/)
-- Enable [Corepack](https://github.com/nodejs/corepack) using `corepack enable`
-- Install dependencies using `pnpm install`
-- Run interactive tests using `pnpm dev`
+```ts
+addServerFunction("here", function() {
+  return "here";
+});
+```
+#### `plugin`
+The plugin that can be passed to Vite.
 
-## License
+#### `serverRPC`
+An object that can be used to call the client functions. The RPC is also bound to the `this` in server functions.
 
-Made with 💛
+```ts
+addServerFunction("here", function() {
+  console.log(serverRPC === this)
+  return "here";
+});
+```
 
-Published under [MIT License](./LICENSE).
+### Client
+```ts
+declare const clientRPC: ClientRPC;
+declare function addClientFunction<T extends keyof ClientFunctions>(name: T, func: ToClientFunction<ClientFunctions[T]>): void;
+declare function addClientFunction(func: ClientFunction): void;
+declare function changePosition(position: 'bottom' | 'top' | 'left' | 'right'): void;
+```
+#### `addClientFunction`
 
-<!-- Badges -->
+Add a client function that the server can run using the rpc!
 
-[npm-version-src]: https://img.shields.io/npm/v/packageName?style=flat&colorA=18181B&colorB=F0DB4F
-[npm-version-href]: https://npmjs.com/package/packageName
-[npm-downloads-src]: https://img.shields.io/npm/dm/packageName?style=flat&colorA=18181B&colorB=F0DB4F
-[npm-downloads-href]: https://npmjs.com/package/packageName
-[codecov-src]: https://img.shields.io/codecov/c/gh/unjs/packageName/main?style=flat&colorA=18181B&colorB=F0DB4F
-[codecov-href]: https://codecov.io/gh/unjs/packageName
-[bundle-src]: https://img.shields.io/bundlephobia/minzip/packageName?style=flat&colorA=18181B&colorB=F0DB4F
-[bundle-href]: https://bundlephobia.com/result?p=packageName
-[license-src]: https://img.shields.io/github/license/unjs/packageName.svg?style=flat&colorA=18181B&colorB=F0DB4F
-[license-href]: https://github.com/unjs/packageName/blob/main/LICENSE
-[jsdocs-src]: https://img.shields.io/badge/jsDocs.io-reference-18181B?style=flat&colorA=18181B&colorB=F0DB4F
-[jsdocs-href]: https://www.jsdocs.io/package/packageName
+```ts
+import { addClientFunction } from 'vite-plugin-devtools/client'
+
+addClientFunction('ping', () => {
+  return 'response from client'
+})
+```
+server:
+
+```ts
+setInterval(async () => {
+  console.log('pinging the client, response:', await serverRPC.ping());
+}, 3000);
+```
+
+#### `clientRPC`
+Similar to `serverRPC`, but for all the functions that the server defined using
+`addServerFunction`.
+
+#### `changePosition`
+changes the position of the devtools bar and all of the associated iframes. This
+function also affects other devtools positions also.
+

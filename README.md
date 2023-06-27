@@ -1,17 +1,23 @@
-![](patak-tweet.png)
-
 # vite-plugin-devtools
 
-A framework-agnostic devtools builder for any tool/library that is based on
-vite. It can be used as a shared base for [vite-plugin-vue-devtools](https://github.com/webfansplz/vite-plugin-vue-devtools) and
-[nuxt-devtools](https://github.com/nuxt/devtools).
+![vite-plugin-devtools](patak-tweet.png)
+
+## Description
+
+vite-plugin-devtools is a framework-agnostic devtools builder designed for any tool or library based on Vite. It serves as a shared foundation for other devtools plugins such as [vite-plugin-vue-devtools](https://github.com/webfansplz/vite-plugin-vue-devtools) and [nuxt-devtools](https://github.com/nuxt/devtools).
+
+Key Features:
 
 - Extensive API
-- Multi-devtools Option
-- Simple & Light-weight
-- Full Client & Server Control
+- Multiple devtools options
+- Simple and lightweight
+- Full control over the client and server
 
-```ts
+## Usage
+
+The following code demonstrates how to use vite-plugin-devtools:
+
+```typescript
 // server (vite.config.js or plugin entry)
 import createDevtools from "vite-plugin-devtools";
 
@@ -29,9 +35,12 @@ addClientFunction('ping', () => {
 ```
 
 ## API
-### `createDevtools`
 
-```ts
+### createDevtools
+
+The `createDevtools` function is used to initialize the devtools.
+
+```typescript
 type Options = {
     icon: string;
     clientDir: string;
@@ -44,57 +53,65 @@ declare function createDevtools<T extends keyof ServerFunctions = keyof ServerFu
 };
 ```
 
-#### `addServerFunction`
+#### addServerFunction
 
-```ts
+The `addServerFunction` function allows adding server functions.
+
+```typescript
 addServerFunction("here", function() {
   return "here";
 });
 ```
-#### `plugin`
-The plugin that can be passed to Vite.
 
-#### `serverRPC`
-An object that can be used to call the client functions. The RPC is also bound to the `this` in server functions.
+#### plugin
 
-```ts
+The `plugin` is an option that can be passed to Vite.
+
+#### serverRPC
+
+The `serverRPC` object is used to call client functions and is bound to the server functions.
+
+```typescript
 addServerFunction("here", function() {
-  console.log(serverRPC === this)
+  console.log(serverRPC === this);
   return "here";
 });
 ```
 
 ### Client
-```ts
+
+```typescript
 declare const clientRPC: ClientRPC;
 declare function addClientFunction<T extends keyof ClientFunctions>(name: T, func: ToClientFunction<ClientFunctions[T]>): void;
 declare function addClientFunction(func: ClientFunction): void;
 declare function changePosition(position: 'bottom' | 'top' | 'left' | 'right'): void;
 ```
-#### `addClientFunction`
 
-Add a client function that the server can run using the rpc!
+#### addClientFunction
 
-```ts
+The `addClientFunction` function is used to add a client function that can be called by the server using RPC.
+
+```typescript
 import { addClientFunction } from 'vite-plugin-devtools/client'
 
 addClientFunction('ping', () => {
   return 'response from client'
 })
 ```
-server:
 
-```ts
+Server example:
+
+```typescript
 setInterval(async () => {
   console.log('pinging the client, response:', await serverRPC.ping());
 }, 3000);
 ```
 
-#### `clientRPC`
-Similar to `serverRPC`, but for all the functions that the server defined using
-`addServerFunction`.
+#### clientRPC
 
-#### `changePosition`
-changes the position of the devtools bar and all of the associated iframes. This
-function also affects other devtools positions also.
+The `clientRPC` is similar to `serverRPC` but allows calling functions defined by the server using `addServerFunction`.
+
+#### changePosition
+
+The `changePosition` function is used to modify the position of the devtools bar and associated iframes. This function affects other devtools positions as well.
 

@@ -1,4 +1,6 @@
 import "virtual:devtools:common";
+import * as solid from 'solid-js'
+console.log(solid)
 import { iframeSrc, icon } from "./injectable";
 
 const devtoolsButton = document.createElement("button");

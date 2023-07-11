@@ -1,38 +1,54 @@
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
-import { PANEL_MAX, PANEL_MIN, popupWindow, state, useIframe } from './composables'
+import { PANEL_MAX, PANEL_MIN, popupWindow, state, useIframe, useInspector, usePanelVisible, usePiPMode } from './composables'
 import { useWindowEventListener } from './utils'
+
+let isAppCreated = false
+const panelState = ref<{
+  viewMode: 'default' | 'xs'
+}>({
+  viewMode: 'default',
+})
 
 const props = defineProps<{
   isDragging: boolean
-
+  name: string
   iframeSrc: string
-  client: {
-    close: () => void
-    /* getIFrame: () => HTMLIFrameElement */
-    inspector: {
-      isEnabled: Ref<boolean>
-      disable: () => void
-    } | undefined
-  }
-
-  viewMode: 'default' | 'xs'
+  onIframe: string
 }>()
+const { togglePanelVisible, closePanel, panelVisible } = usePanelVisible()
 
 const container = ref<HTMLElement>()
 const isResizing = ref<false | { top?: boolean; left?: boolean; right?: boolean; bottom?: boolean }>(false)
 
-const { getIframe } = useIframe(props.iframeSrc, async () => {
-  /* const iframe = getIframe() */
-  /* await waitForClientInjection(iframe) */
-  /* setupClient(iframe) */
-})
+const {
+  toggleInspector, inspectorLoaded,
+  inspectorEnabled, disableInspector,
+} = useInspector()
+
+const { getIframe, iframe } = useIframe(props.name, props.iframeSrc)
+
+// Picture-in-Picture mode
+/* const { popup } = usePiPMode(getIframe, hook) */
+const { popup } = usePiPMode(props.name, getIframe)
+
+
+import(/* @vite-ignore */ props.onIframe).then((m) => m?.['default'](getIframe()))
+
+/* watchEffect(() => {
+  console.log('here')
+  if (iframe.value) {
+    console.log('here after')
+    if (props.onIframe) { */
+    //  import(/* @vite-ignore */ props.onIframe).then((m) => m?.['default']())
+    /* }
+  }
+}) */
 
 watchEffect(() => {
   if (!container.value)
     return
   if (state.value.open === props.iframeSrc) {
-    /* const iframe = getIFrame() */
     const iframe = getIframe()
     iframe.style.pointerEvents = (isResizing.value || props.isDragging) ? 'none' : 'auto'
 
@@ -44,10 +60,10 @@ watchEffect(() => {
 })
 
 useWindowEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && props.client.inspector?.isEnabled.value) {
+  if (e.key === 'Escape' && inspectorEnabled.value) {
     e.preventDefault()
-    props.client.inspector?.disable()
-    props.client.close()
+    disableInspector()
+    closePanel()
   }
 })
 
@@ -56,7 +72,7 @@ useWindowEventListener('mousedown', (e: MouseEvent) => {
     return
   if (popupWindow.value)
     return
-  if (!state.value.open || isResizing.value || props.client.inspector?.isEnabled.value)
+  if (!state.value.open || isResizing.value || inspectorEnabled.value)
     return
 
   const matched = e.composedPath().find((_el) => {
@@ -112,10 +128,10 @@ useWindowEventListener('mouseleave', () => {
 
 <template>
   <div
-    v-show="state.open === props.iframeSrc && !client.inspector?.isEnabled.value && !popupWindow"
+    v-show="state.open === props.iframeSrc && !inspectorEnabled.value && !popupWindow"
     ref="container"
     class="devtools-frame"
-    :class="{ 'view-mode-xs': props.viewMode === 'xs' }"
+    :class="{ 'view-mode-xs': panelState.viewMode === 'xs' }"
   >
     <!-- Handlers -->
     <div

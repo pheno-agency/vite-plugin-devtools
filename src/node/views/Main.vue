@@ -4,41 +4,13 @@ import { computed, ref } from 'vue'
 // @ts-expect-error virtual module
 /* import vueDevToolsOptions from 'virtual:devtools-options' */
 import Frame from './FrameBox.vue'
-import { useIframe, useInspector, usePanelVisible, usePiPMode, usePosition, useDevtools } from './composables'
-import { checkIsSafari, useColorScheme, usePreferredColorScheme } from './utils'
+import { useIframe, useInspector, usePanelVisible, usePiPMode, usePosition, useDevtools, useColorScheme } from './composables'
+import { checkIsSafari, usePreferredColorScheme } from './utils'
 
-const props = defineProps({
-  hook: {
-    type: Object,
-    required: true,
-  },
-})
-
-const hook = props.hook
-
-const DevToolsHooks = {
-  APP_INIT: 'app:init',
-  COMPONENT_UPDATED: 'component:updated',
-  COMPONENT_ADDED: 'component:added',
-  COMPONENT_REMOVED: 'component:removed',
-  COMPONENT_EMIT: 'component:emit',
-  PERF_START: 'perf:start',
-  PERF_END: 'perf:end',
-  ADD_ROUTE: 'router:add-route',
-  REMOVE_ROUTE: 'router:remove-route',
-}
-
-const hookBuffer: [string, { args: any[] }][] = []
-
-let isAppCreated = false
-const panelState = ref<{
-  viewMode: 'default' | 'xs'
-}>({
-  viewMode: 'default',
-})
 const devtools = useDevtools()
 
-const { togglePanelVisible, closePanel, panelVisible } = usePanelVisible()
+const { togglePanelVisible, panelVisible } = usePanelVisible()
+
 const panelEl = ref<HTMLDivElement>()
 const { onPointerDown, anchorStyle, iframeStyle, isDragging, isVertical } = usePosition(panelEl)
 const vars = computed(() => {
@@ -54,172 +26,13 @@ const vars = computed(() => {
   }
 })
 
-function waitForClientInjection(iframe: HTMLIFrameElement, retry = 50, timeout = 200): Promise<void> | void {
-  const test = () => !!iframe?.contentWindow?.__VUE_DEVTOOLS_VIEW__ && isAppCreated
-
-  if (test())
-    return
-
-  return new Promise((resolve, reject) => {
-    const interval = setInterval(() => {
-      if (test()) {
-        clearInterval(interval)
-        resolve()
-      }
-      else if (retry-- <= 0) {
-        clearInterval(interval)
-        reject(Error('Vue Devtools client injection failed'))
-      }
-    }, timeout)
-  })
-}
 
 const {
   toggleInspector, inspectorLoaded,
   inspectorEnabled, disableInspector,
+  openInEditor, waitForInspectorInit,
 } = useInspector()
 
-/* const clientUrl = `${vueDevToolsOptions.base || '/'}__devtools__/` */
-const clientUrl = `/__devtools-test_devtools__`
-/* const { getIframe } = useIframe(clientUrl, async () => {
-  const iframe = getIframe()
-  await waitForClientInjection(iframe)
-  setupClient(iframe)
-}) */
-
-// Picture-in-Picture mode
-/* const { popup } = usePiPMode(getIframe, hook) */
-
-function setupClient(iframe: HTMLIFrameElement) {
-  const injection: any = iframe?.contentWindow?.__VUE_DEVTOOLS_VIEW__
-  injection.setClient({
-    hook,
-    hookBuffer,
-    // inspector: {
-    //   enable: enableInspector,
-    //   disable: disableInspector,
-    // },
-    panel: {
-      toggleViewMode: () => {
-        if (panelState.value.viewMode === 'xs')
-          panelState.value.viewMode = 'default'
-        else
-          panelState.value.viewMode = 'xs'
-      },
-      toggle: togglePanelVisible,
-      togglePosition(position) {
-        /* if (position === 'popup')
-          popup() */
-      },
-    },
-  })
-}
-
-function updateHookBuffer(type, args) {
-  hookBuffer.push([type, args])
-}
-
-function collectDynamicRoute(app) {
-  const router = app?.config?.globalProperties?.$router
-  if (!router)
-    return
-
-  const _addRoute = router.addRoute
-  router.addRoute = (...args) => {
-    const res = _addRoute(...args)
-
-    if (!iframe.value?.contentWindow?.__VUE_DEVTOOLS_VIEW__?.loaded) {
-      updateHookBuffer(DevToolsHooks.ADD_ROUTE, {
-        args: [...args],
-      })
-    }
-
-    return res
-  }
-
-  const _removeRoute = router.removeRoute
-  router.removeRoute = (...args) => {
-    const res = _removeRoute(...args)
-
-    if (!iframe.value?.contentWindow?.__VUE_DEVTOOLS_VIEW__?.loaded) {
-      updateHookBuffer(DevToolsHooks.REMOVE_ROUTE, {
-        args: [...args],
-      })
-    }
-
-    return res
-  }
-}
-
-function collectHookBuffer() {
-  // const sortId = 0
-
-  function stopCollect(component) {
-    return component?.root?.type?.devtools?.hide || iframe.value?.contentWindow?.__VUE_DEVTOOLS_VIEW__?.loaded
-  }
-
-  hook.on(DevToolsHooks.APP_INIT, (app) => {
-    if (!app || app._instance.type?.devtools?.hide)
-      return
-
-    collectDynamicRoute(app)
-    updateHookBuffer(DevToolsHooks.APP_INIT, {
-      app,
-    })
-    setTimeout(() => {
-      isAppCreated = true
-    }, 80)
-  });
-
-  // close perf to avoid performance issue (#9)
-  // hook.on(DevToolsHooks.PERF_START, (app, uid, component, type, time) => {
-  //   if (stopCollect(component))
-  //     return
-
-  //   updateHookBuffer(DevToolsHooks.COMPONENT_EMIT, {
-  //     now: Date.now(),
-  //     app,
-  //     uid,
-  //     component,
-  //     type,
-  //     time,
-  //     sortId: sortId++,
-  //   })
-  // })
-  // hook.on(DevToolsHooks.PERF_END, (app, uid, component, type, time) => {
-  //   if (stopCollect(component))
-  //     return
-
-  //   updateHookBuffer(DevToolsHooks.PERF_END, {
-  //     now: Date.now(),
-  //     app,
-  //     uid,
-  //     component,
-  //     type,
-  //     time,
-  //     sortId: sortId++,
-  //   })
-  // })
-
-  [
-    DevToolsHooks.COMPONENT_UPDATED,
-    DevToolsHooks.COMPONENT_ADDED,
-    DevToolsHooks.COMPONENT_REMOVED,
-    DevToolsHooks.COMPONENT_EMIT,
-  ].forEach((item) => {
-    hook.on(item, (app, uid, parentUid, component) => {
-      if (!app || (typeof uid !== 'number' && !uid) || !component || stopCollect(component))
-        return
-
-      updateHookBuffer(item, {
-        app, uid, parentUid, component,
-      })
-    })
-  })
-}
-
-// init
-/* collectHookBuffer() */
 </script>
 
 <template>
@@ -235,7 +48,7 @@ function collectHookBuffer() {
         v-for="item in devtools"
         :key="item.iframeSrc"
         class="devtools-icon-button devtools-vue-button"
-        title="Toggle Vue DevTools" aria-label="Toggle devtools panel"
+        :title="'Toggle ' + item.name" aria-label="Toggle devtools panel"
         :style="panelVisible === item.iframeSrc ? '' : 'filter:saturate(0)'"
         @click="togglePanelVisible(item.iframeSrc)"
         v-html="item.icon"
@@ -262,17 +75,10 @@ function collectHookBuffer() {
     <Frame
       v-for="item in devtools"
       :key="item.iframeSrc"
+      :name="item.name"
       :iframeSrc="item.iframeSrc"
+      :onIframe="item.onIframe"
       :style="iframeStyle" :is-dragging="isDragging"
-      :client="{
-        close: closePanel,
-        inspector: {
-          disable: disableInspector,
-          isEnabled: ref(inspectorEnabled),
-        },
-        /* getIFrame: getIframe, */
-      }"
-      :view-mode="panelState.viewMode"
     />
   </div>
 </template>

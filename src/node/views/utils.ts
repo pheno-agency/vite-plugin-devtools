@@ -159,8 +159,7 @@ export function useScreenSafeArea() {
   }
 }
 
-// color-scheme
-export const useColorScheme = () => useStorage('vueuse-color-scheme', 'auto', true)
+
 
 /**
  * Reactive Media Query.

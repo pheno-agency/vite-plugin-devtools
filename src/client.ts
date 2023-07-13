@@ -82,8 +82,7 @@ export function addClientFunction<T extends keyof ClientFunctions>(
 }
 
 export function togglePopup(name: string) {
-  // @ts-expect-error globals
-  return globalThis.popupIframes[name]?.();
+  return window.popupIframes[name]?.();
 }
 
 export function getTheme() {
@@ -108,3 +107,7 @@ export function onThemeChange(cb: (theme: string) => any) {
   window.addEventListener("storage", listener);
   return () => window.removeEventListener("storage", listener);
 }
+
+export const togglePanelVisible = window.togglePanelVisible
+export const toggleViewMode = window.toggleViewMode
+export const getViewMode = window.getViewMode

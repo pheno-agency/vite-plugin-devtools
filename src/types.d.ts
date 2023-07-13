@@ -37,3 +37,12 @@ export interface ImageMeta {
   type?: string
   mimeType?: string
 }
+
+declare global {
+  export interface Window {
+    popupIframes: Record<string, () => Promise<any>>;
+    togglePanelVisible(name: string): void
+    toggleViewMode(viewMode: "default" | "xs"): void
+    getViewMode(): "default" | "xs"
+  }
+}

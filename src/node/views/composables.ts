@@ -24,7 +24,8 @@ interface DevToolsFrameState {
   position: string;
   isFirstVisit: boolean;
   closeOnOutsideClick: boolean;
-  theme: 'dark' | 'auto' | 'light'
+  viewMode: "default" | "xs";
+  theme: "dark" | "auto" | "light";
 }
 
 // ---- state ----
@@ -46,12 +47,13 @@ export const state = useObjectStorage<DevToolsFrameState>(
     position: "bottom",
     isFirstVisit: true,
     closeOnOutsideClick: false,
-    theme: 'auto'
+    viewMode: "default",
+    theme: "auto",
   }
 );
 
 // color-scheme
-export const useColorScheme = () => computed(() => state.value.theme)
+export const useColorScheme = () => computed(() => state.value.theme);
 
 // ---- useIframe ----
 export function useIframe(name: string, clientUrl: string) {
@@ -138,9 +140,13 @@ export function usePanelVisible() {
     },
   });
 
-  const toggleVisible = (iframeSrc: string) => {
-    visible.value = visible.value === iframeSrc ? null : iframeSrc;
+  const toggleVisible = (name: string) => {
+    visible.value = visible.value === name ? null : name;
   };
+
+  const toggleViewMode = (viewMode: "default" | "xs") =>{
+    state.value.viewMode = viewMode ?? 'default'
+  }
 
   const closePanel = () => {
     if (!visible.value) return;
@@ -156,14 +162,16 @@ export function usePanelVisible() {
   return {
     panelVisible: visible,
     togglePanelVisible: toggleVisible,
+    toggleViewMode,
+    getViewMode: () => state.value.viewMode,
     closePanel,
   };
 }
 
-declare global {
+/* declare global {
   var popupIframes: Record<string, () => Promise<any>>;
-}
-globalThis.popupIframes ??= {};
+} */
+window.popupIframes ??= {};
 
 // ---- usePipMode ----
 export function usePiPMode(
@@ -219,7 +227,7 @@ export function usePiPMode(
       },
     };
   }
-  globalThis.popupIframes[name] = popup;
+  window.popupIframes[name] = popup;
   return {
     popup,
   };
@@ -239,6 +247,7 @@ export function useDevtools(): Ref<{
   name: string;
   iframeSrc: string;
   icon: string;
+  inspector: boolean;
   onIframe: string;
 }> {
   // @ts-expect-error globals

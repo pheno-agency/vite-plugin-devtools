@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 
 // @ts-expect-error virtual module
 /* import vueDevToolsOptions from 'virtual:devtools-options' */
 import Frame from './FrameBox.vue'
-import { useIframe, useInspector, usePanelVisible, usePiPMode, usePosition, useDevtools, useColorScheme } from './composables'
+import { useIframe, useInspector, usePanelVisible, usePiPMode, usePosition, useDevtools, useColorScheme, state } from './composables'
 import { checkIsSafari, usePreferredColorScheme } from './utils'
 
 const devtools = useDevtools()
 
-const { togglePanelVisible, panelVisible } = usePanelVisible()
+const { togglePanelVisible, toggleViewMode, getViewMode, panelVisible } = usePanelVisible()
+window.togglePanelVisible = togglePanelVisible
+window.toggleViewMode = toggleViewMode
+window.getViewMode = getViewMode
+
+onMounted(() => {
+  state.value.viewMode = 'default'
+})
+
 
 const panelEl = ref<HTMLDivElement>()
 const { onPointerDown, anchorStyle, iframeStyle, isDragging, isVertical } = usePosition(panelEl)
@@ -27,11 +35,12 @@ const vars = computed(() => {
 })
 
 
-const {
+/* const {
   toggleInspector, inspectorLoaded,
   inspectorEnabled, disableInspector,
   openInEditor, waitForInspectorInit,
-} = useInspector()
+} = useInspector() */
+/* :style="inspectorEnabled ? 'opacity:1;color:#00dc82' : ''" */
 
 </script>
 
@@ -50,21 +59,21 @@ const {
         class="devtools-icon-button devtools-vue-button"
         :title="'Toggle ' + item.name" aria-label="Toggle devtools panel"
         :style="panelVisible === item.iframeSrc ? '' : 'filter:saturate(0)'"
-        @click="togglePanelVisible(item.iframeSrc)"
+        @click="togglePanelVisible(item.name)"
         v-html="item.icon"
       >
       </div>
       <div style="border-left: 1px solid #8883;width:1px;height:10px;" />
       <div
+        v-for="item in devtools"
+        :v-if="item.inspector"
         class="devtools-icon-button devtools-inspector-button"
-        :class="{ disabled: !inspectorLoaded }"
-        :disabled="!inspectorLoaded"
-        title="Toggle Component Inspector" @click="toggleInspector"
+        :class="{ [item.name]: true }"
+        title="Toggle Component Inspector"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
           style="height: 1.1em; width: 1.1em; opacity:0.5;"
-          :style="inspectorEnabled ? 'opacity:1;color:#00dc82' : ''"
           viewBox="0 0 24 24"
         >
           <g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><circle cx="12" cy="12" r=".5" fill="currentColor" /><path d="M5 12a7 7 0 1 0 14 0a7 7 0 1 0-14 0m7-9v2m-9 7h2m7 7v2m7-9h2" /></g>

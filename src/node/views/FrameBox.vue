@@ -4,11 +4,6 @@ import { PANEL_MAX, PANEL_MIN, popupWindow, state, useIframe, useInspector, useP
 import { useWindowEventListener } from './utils'
 
 let isAppCreated = false
-const panelState = ref<{
-  viewMode: 'default' | 'xs'
-}>({
-  viewMode: 'default',
-})
 
 const props = defineProps<{
   isDragging: boolean
@@ -16,7 +11,7 @@ const props = defineProps<{
   iframeSrc: string
   onIframe: string
 }>()
-const { togglePanelVisible, closePanel, panelVisible } = usePanelVisible()
+const { closePanel, panelVisible } = usePanelVisible()
 
 const container = ref<HTMLElement>()
 const isResizing = ref<false | { top?: boolean; left?: boolean; right?: boolean; bottom?: boolean }>(false)
@@ -131,7 +126,7 @@ useWindowEventListener('mouseleave', () => {
     v-show="state.open === props.iframeSrc && !inspectorEnabled.value && !popupWindow"
     ref="container"
     class="devtools-frame"
-    :class="{ 'view-mode-xs': panelState.viewMode === 'xs' }"
+    :class="{ 'view-mode-xs': state.viewMode === 'xs' }"
   >
     <!-- Handlers -->
     <div

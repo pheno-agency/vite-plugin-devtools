@@ -81,6 +81,7 @@ interface AddServerFunction<T extends keyof ServerFunctions> {
 
 // useful for detecting only one time `views/dist/view.js` run
 let firstPlugin: string;
+let appendTo: string | RegExp | undefined
 
 export function getBase(name: string) {
   return `/__${name}_devtools__/`;
@@ -89,6 +90,7 @@ export function getBase(name: string) {
 export default function createDevtools<
   T extends keyof ServerFunctions = keyof ServerFunctions
 >(name: string, options: Options) {
+  appendTo = options.appendTo
   let server: ViteDevServer;
   const config: Config = {
     serverFunctions: {
@@ -139,18 +141,36 @@ export default function createDevtools<
         }
       },
       transform(code, id) {
-        const { appendTo } = options;
+        if (!appendTo)
+          return
 
-        if (!appendTo) return;
+        let imports: string | undefined
+        if (!firstPlugin) {
+          firstPlugin = name;
+          imports = `
+import "virtual:devtools:${name}:views/dist/view.js"
+import "virtual:devtools:${name}:views/dist/style.css"
+`
+        }
 
-        const [filename] = id.split("?", 2);
-        if (
-          (typeof appendTo === "string" && filename.endsWith(appendTo)) ||
-          (appendTo instanceof RegExp && appendTo.test(filename))
-        )
-          return { code: `${code}\nimport 'virtual:vue-devtools-path:app.js'` };
+        const [filename] = id.split('?', 2)
+        if ((typeof appendTo === 'string' && filename.endsWith(appendTo))
+          || (appendTo instanceof RegExp && appendTo.test(filename)))
+          return { code: `${code}\n
+                    globalThis.__devtools ??= []
+                    globalThis.__devtools.push({
+                      name: '${name}',
+                      iframeSrc: '${iframeSrc}',
+                      icon: \`${options.icon}\`,
+                      inspector: ${!!options?.inspector},
+                      onIframe: '${options.onIframe}'
+                    })
+                    ${imports}` }
       },
       transformIndexHtml(html) {
+        if (appendTo) {
+          return
+        }
         if (!firstPlugin) {
           firstPlugin = name;
         }

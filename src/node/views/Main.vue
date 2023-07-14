@@ -34,14 +34,6 @@ const vars = computed(() => {
   }
 })
 
-
-/* const {
-  toggleInspector, inspectorLoaded,
-  inspectorEnabled, disableInspector,
-  openInEditor, waitForInspectorInit,
-} = useInspector() */
-/* :style="inspectorEnabled ? 'opacity:1;color:#00dc82' : ''" */
-
 </script>
 
 <template>
